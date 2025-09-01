@@ -1,0 +1,46 @@
+spring :
+  application :
+    name : initalizr
+  datasource:
+    url: jdbc:mysql://uconnect.conv.site:33062/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+    username: root
+    password: ${sm.mysql.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: true
+        order_inserts: true
+        jdbc.batch_size: 100
+logging:
+  level:
+    org.hibernate.SQL: info
+    org.hibernate.type: trace
+
+db-table:
+  batch-size: 100
+  startIdx: 40000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:mysql:aws://rds-dev-ufms-cluster.cluster-caorfsjt2qi0.ap-northeast-2.rds.amazonaws.com:3306/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+    username: ufms_was
+    password: ${sm.mysql.password}
+    driver-class-name: software.aws.rds.jdbc.mysql.Driver
+---
+spring:
+  config:
+    activate:
+      on-profile: stg
+  datasource:
+    url: jdbc:mysql:aws://rds-stg-ufms-cluster.cluster-cuotfas3arzc.ap-northeast-2.rds.amazonaws.com:3306/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+    username: ufms_was
+    password: ${sm.mysql.password}
+    driver-class-name: software.aws.rds.jdbc.mysql.Driver

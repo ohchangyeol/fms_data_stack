@@ -1,0 +1,73 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.db'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' }
+}
+
+ext {
+	set('awsRdsVersion', "1.1.15")
+}
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	implementation 'com.mysql:mysql-connector-j'
+
+	implementation 'org.apache.tomcat:tomcat-jdbc'
+	implementation group: 'software.aws.rds', name: 'aws-mysql-jdbc', version: "${awsRdsVersion}"
+
+	implementation 'org.reflections:reflections:0.10.2'
+
+	// test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation('org.projectlombok:lombok')
+	testAnnotationProcessor('org.projectlombok:lombok')
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+bootRun {
+	systemProperties System.properties
+	if ( project.hasProperty('jvmArgs') ) {
+		jvmArgs project.jvmArgs.split('\\s+')
+	}
+}
+
+tasks.register('tableToEntity', JavaExec) {
+	group = 'application'
+	description = 'Run CompositeKeyGenerator to generate PK classes'
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass.set('com.db.initalizr.Generate.CompositeKeyGenerator')
+}
