@@ -1,4 +1,4 @@
-package com.db.dataloader.project.dx.service;
+package com.db.dataloader.project.dx.svc;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
@@ -31,14 +31,18 @@ public class ManualCreateSvc {
     public void runManual() {
 
         String sql = """
-                SELECT API_LOG_SEQ, API_LOG_DATE, ML_SERVER_NM, ML_MODEL_NM, ML_TYPE_CD, IOT_MODEL_NM, DEV_UUID, CTN, REQ_TIME, RES_TIME, REQ_DATA, RES_DATA, SUCC_YN, RESULT_CD
-                FROM TB_AIGW_API_LOG PARTITION(P_202508);
+                SELECT CTL_DATE, CTL_SEQ, ENTR_DEV_SEQ, CUST_SEQ, SVC_CD, DEV_CLS_CD, DEV_MDL_CD, RES_DATE, ENTR_NO, CTN, ENTITY_ID, DEV_ATTR_CD_ID, PAM_KEY, DEV_VAL, CUR_DEV_VAL, CTL_TYPE, PRC_CD, RETRY_CNT, DEV_TIME, REG_USR_ID, REG_DTTM, MOD_USR_ID, MOD_DTTM
+                FROM iiot_sf.tb_iot_ctl_hist PARTITION(P_202602)
                     """;
         List<Tuple> results = em.createNativeQuery(sql, Tuple.class).getResultList();
 
-        int totalCount = 3600000 ;
+        int totalCount = 126300 ;
         List<String> strings = List.of(
-                "2025-09"
+                "2025-09",
+                "2025-10",
+                "2025-11",
+                "2025-12",
+                "2026-01"
         );
         for (String st : strings){
             txTemplate.execute(status -> {
@@ -54,14 +58,12 @@ public class ManualCreateSvc {
     private void prosess(int totalCount, List<Tuple> results , String partition) {
         Iterable<String> dates = splitMonthIterable(partition, totalCount);
 
-        System.out.println("");
-
         int batchSize = 1000;
         StringBuilder insertSql = new StringBuilder();
         int count = 0, total = 0;
         String insertPrefix = """
-                INSERT IGNORE INTO iiot_sf.tb_aigw_api_log
-                (API_LOG_DATE, ML_SERVER_NM, ML_MODEL_NM, ML_TYPE_CD, IOT_MODEL_NM, DEV_UUID, CTN, REQ_TIME, RES_TIME, REQ_DATA, RES_DATA, SUCC_YN, RESULT_CD)
+                INSERT IGNORE INTO iiot_sf.TB_IOT_CTL_HIST
+                (CTL_DATE, CTL_SEQ, ENTR_DEV_SEQ, CUST_SEQ, SVC_CD, DEV_CLS_CD, DEV_MDL_CD, RES_DATE, ENTR_NO, CTN, ENTITY_ID, DEV_ATTR_CD_ID, PAM_KEY, DEV_VAL, CUR_DEV_VAL, CTL_TYPE, PRC_CD, RETRY_CNT, DEV_TIME, REG_USR_ID, REG_DTTM, MOD_USR_ID, MOD_DTTM)
                 VALUES
             """;
 
@@ -76,18 +78,27 @@ public class ManualCreateSvc {
             Tuple t = results.get(rng.nextInt(results.size()));
             insertSql.append("(")
                     .append(toSql(date)).append(",")
-                    .append(toSql(t.get("ML_SERVER_NM"))).append(",")
-                    .append(toSql(t.get("ML_MODEL_NM"))).append(",")
-                    .append(toSql(t.get("ML_TYPE_CD"))).append(",")
-                    .append(toSql(t.get("IOT_MODEL_NM"))).append(",")
-                    .append(toSql(t.get("DEV_UUID"))).append(",")
+                    .append(toSql(t.get("ENTR_DEV_SEQ"))).append(",")
+                    .append(toSql(t.get("CUST_SEQ"))).append(",")
+                    .append(toSql(t.get("SVC_CD"))).append(",")
+                    .append(toSql(t.get("DEV_CLS_CD"))).append(",")
+                    .append(toSql(t.get("DEV_MDL_CD"))).append(",")
+                    .append(toSql(date)).append(",")
+                    .append(toSql(t.get("ENTR_NO"))).append(",")
                     .append(toSql(t.get("CTN"))).append(",")
-                    .append(toSql(date)).append(",")
-                    .append(toSql(date)).append(",")
-                    .append(toSql(t.get("REQ_DATA"))).append(",")
-                    .append(toSql(t.get("RES_DATA"))).append(",")
-                    .append(toSql(t.get("SUCC_YN"))).append(",")
-                    .append(toSql(t.get("RESULT_CD")))
+                    .append(toSql(t.get("ENTITY_ID"))).append(",")
+                    .append(toSql(t.get("DEV_ATTR_CD_ID"))).append(",")
+                    .append(toSql(t.get("PAM_KEY"))).append(",")
+                    .append(toSql(t.get("DEV_VAL"))).append(",")
+                    .append(toSql(t.get("CUR_DEV_VAL"))).append(",")
+                    .append(toSql(t.get("CTL_TYPE"))).append(",")
+                    .append(toSql(t.get("PRC_CD"))).append(",")
+                    .append(toSql(t.get("RETRY_CNT"))).append(",")
+                    .append(toSql(t.get("DEV_TIME"))).append(",")
+                    .append(toSql(t.get("REG_USR_ID"))).append(",")
+                    .append(toSql(stringDate(date))).append(",")
+                    .append(toSql(t.get("MOD_USR_ID"))).append(",")
+                    .append(toSql(t.get("MOD_DTTM")))
                     .append(")");
             count++;
 
@@ -113,9 +124,9 @@ public class ManualCreateSvc {
         int batchSize = 1000;
         AtomicInteger total = new AtomicInteger();
         String insertSql = """
-                INSERT IGNORE INTO iiot_sf.tb_aigw_api_log
-                (API_LOG_DATE, ML_SERVER_NM, ML_MODEL_NM, ML_TYPE_CD, IOT_MODEL_NM, DEV_UUID, CTN, REQ_TIME, RES_TIME, REQ_DATA, RES_DATA, SUCC_YN, RESULT_CD)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO iiot_sf.tb_iot_ctl_hist
+                (CTL_DATE, ENTR_DEV_SEQ, CUST_SEQ, SVC_CD, DEV_CLS_CD, DEV_MDL_CD, RES_DATE, ENTR_NO, CTN, ENTITY_ID, DEV_ATTR_CD_ID, PAM_KEY, DEV_VAL, CUR_DEV_VAL, CTL_TYPE, PRC_CD, RETRY_CNT, DEV_TIME, REG_USR_ID, REG_DTTM, MOD_USR_ID, MOD_DTTM)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         Iterator<String> dateIterator = dates.iterator();
@@ -131,18 +142,27 @@ public class ManualCreateSvc {
 
                     int idx = 1;
                     setParam(ps, idx++, date);
-                    setParam(ps, idx++, t.get("ML_SERVER_NM"));
-                    setParam(ps, idx++, t.get("ML_MODEL_NM"));
-                    setParam(ps, idx++, t.get("ML_TYPE_CD"));
-                    setParam(ps, idx++, t.get("IOT_MODEL_NM"));
-                    setParam(ps, idx++, t.get("DEV_UUID"));
+                    setParam(ps, idx++, t.get("ENTR_DEV_SEQ"));
+                    setParam(ps, idx++, t.get("CUST_SEQ"));
+                    setParam(ps, idx++, t.get("SVC_CD"));
+                    setParam(ps, idx++, t.get("DEV_CLS_CD"));
+                    setParam(ps, idx++, t.get("DEV_MDL_CD"));
+                    setParam(ps, idx++, date);
+                    setParam(ps, idx++, t.get("ENTR_NO"));
                     setParam(ps, idx++, t.get("CTN"));
-                    setParam(ps, idx++, date);
-                    setParam(ps, idx++, date);
-                    setParam(ps, idx++, t.get("REQ_DATA"));
-                    setParam(ps, idx++, t.get("RES_DATA"));
-                    setParam(ps, idx++, t.get("SUCC_YN"));
-                    setParam(ps, idx++, t.get("RESULT_CD"));
+                    setParam(ps, idx++, t.get("ENTITY_ID"));
+                    setParam(ps, idx++, t.get("DEV_ATTR_CD_ID"));
+                    setParam(ps, idx++, t.get("PAM_KEY"));
+                    setParam(ps, idx++, t.get("DEV_VAL"));
+                    setParam(ps, idx++, t.get("CUR_DEV_VAL"));
+                    setParam(ps, idx++, t.get("CTL_TYPE"));
+                    setParam(ps, idx++, t.get("PRC_CD"));
+                    setParam(ps, idx++, t.get("RETRY_CNT"));
+                    setParam(ps, idx++, t.get("DEV_TIME"));
+                    setParam(ps, idx++, t.get("REG_USR_ID"));
+                    setParam(ps, idx++, stringDate(date));
+                    setParam(ps, idx++, t.get("MOD_USR_ID"));
+                    setParam(ps, idx++, t.get("MOD_DTTM"));
 
                     ps.addBatch();
                     count++;
@@ -217,7 +237,7 @@ public class ManualCreateSvc {
                 long offset = (index * base) + Math.min(index, remainder);
                 LocalDateTime timestamp = start.plusNanos(offset);
                 index++;
-                return timestamp.format(FORMATTER2);
+                return timestamp.format(FORMATTER1);
             }
         };
     }

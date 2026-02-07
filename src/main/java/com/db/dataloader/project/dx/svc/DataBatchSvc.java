@@ -1,38 +1,49 @@
-package com.db.dataloader.project.dx.service;
+package com.db.dataloader.project.dx.svc;
 
 import com.db.dataloader.project.dx.dto.TableInfoDto;
+import com.db.dataloader.rsc.CommonConstant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataBatchSvc {
     private final EntityManager em;
+    private final TransactionTemplate txTemplate;
 
-    private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter TS6 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter YMDHMS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-    private static final DateTimeFormatter YMD = DateTimeFormatter.ofPattern("yyyyMMdd");
+    public void process(TableInfoDto tableInfoDto) {
+        List<Tuple> results = em.createNativeQuery(tableInfoDto.getSelect(), Tuple.class).getResultList();
 
-    public void process(TableInfoDto config, List<Tuple> results, String partition) {
-        int totalCount = config.getMonthCnt();
+        for (String partition : tableInfoDto.getPartitions()){
+            txTemplate.execute(status -> {
+                run(tableInfoDto, results, partition);
+                return null;
+            });
+        }
+    }
+
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void run(TableInfoDto tableInfoDto, List<Tuple> results, String partition){
+        int totalCount = tableInfoDto.getMonthCnt();
         Iterator<LocalDateTime> dateIterator = splitMonthIterator(partition, totalCount);
-        List<String> columns = resolveColumns(config);
-        String insertSql = buildInsertSql(config, columns);
+        List<String> columns = resolveColumns(tableInfoDto);
+        String insertSql = buildInsertSql(tableInfoDto, columns);
 
-        int batchSize = config.getBatchSize() > 0 ? config.getBatchSize() : 1000;
+        int batchSize = tableInfoDto.getBatchSize() > 0 ? tableInfoDto.getBatchSize() : 1000;
         Random rng = new Random();
 
         Session session = em.unwrap(Session.class);
@@ -45,7 +56,7 @@ public class DataBatchSvc {
                     Tuple t = results.get(rng.nextInt(results.size()));
                     int idx = 1;
                     for (String col : columns) {
-                        String rule = config.getData().get(col);
+                        String rule = tableInfoDto.getData().get(col);
                         idx = bindValue(ps, idx, rule, t, col, ts);
                     }
                     ps.addBatch();
@@ -56,7 +67,7 @@ public class DataBatchSvc {
                         ps.executeBatch();
                         total += count;
                         count = 0;
-                        System.out.println(total);
+                        log.info("[{}] - insert count :{}",tableInfoDto.getTable(), total);
                     }
                 }
             }
@@ -95,22 +106,22 @@ public class DataBatchSvc {
             return index + 1;
         }
         switch (rule.toLowerCase(Locale.ROOT)) {
-            case "timestemp":
-                ps.setString(index, ts.format(TS));
+            case CommonConstant.COLUMN_TS:
+                ps.setString(index, ts.format(CommonConstant.FORMATTER_TS));
                 return index + 1;
-            case "timestemps":
-                ps.setString(index, ts.format(TS6));
+            case CommonConstant.COLUMN_TS6:
+                ps.setString(index, ts.format(CommonConstant.FORMATTER_TS6));
                 return index + 1;
-            case "date":
-                ps.setString(index, ts.toLocalDate().format(DATE));
+            case CommonConstant.COLUMN_DATE:
+                ps.setString(index, ts.toLocalDate().format(CommonConstant.FORMATTER_DATE));
                 return index + 1;
-            case "ymdhms":
-                ps.setString(index, ts.format(YMDHMS));
+            case CommonConstant.COLUMN_YMDHMS:
+                ps.setString(index, ts.format(CommonConstant.FORMATTER_YMDHMS));
                 return index + 1;
-            case "ymd":
-                ps.setString(index, ts.toLocalDate().format(YMD));
+            case CommonConstant.COLUMN_YMD:
+                ps.setString(index, ts.toLocalDate().format(CommonConstant.FORMATTER_YMD));
                 return index + 1;
-            case "auto":
+            case CommonConstant.COLUMN_AUTO:
                 return index;
             default:
                 throw new IllegalArgumentException("Unknown rule: " + rule + " for column " + col);

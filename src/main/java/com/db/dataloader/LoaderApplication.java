@@ -5,10 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
-public class InitalizrApplication {
+public class LoaderApplication {
 
 	public static void main(String[] args) {
-		ConfigurableApplicationContext context = SpringApplication.run(InitalizrApplication.class, args);
+		ConfigurableApplicationContext context = SpringApplication.run(LoaderApplication.class, args);
 
 		// ManualCreateSvc manual = context.getBean(ManualCreateSvc.class);
 		// manual.runManual();

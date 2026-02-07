@@ -1,6 +1,15 @@
+#################################
+# Server 설정
+#################################
+server:
+  port: ${cnf.port}
+#################################
+# Spring 설정
+#################################
 spring :
   application :
-    name : initalizr
+    name : data_loader
+  port: ${cnf.port}
   datasource:
     # FMS
 #    url: jdbc:mysql://uconnect.conv.site:33062/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
@@ -21,11 +30,6 @@ spring :
         format_sql: true
         order_inserts: true
         jdbc.batch_size: 100
-  devtools:
-    restart:
-      enabled: false
-    livereload:
-      enabled: false
 logging:
   level:
     org.hibernate.SQL: info
@@ -34,25 +38,3 @@ logging:
 db-table:
   batch-size: 100
   startIdx: 40000
-
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-  datasource:
-    url: jdbc:mysql:aws://rds-dev-ufms-cluster.cluster-caorfsjt2qi0.ap-northeast-2.rds.amazonaws.com:3306/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
-    username: ufms_was
-    password: ${sm.mysql.password}
-    driver-class-name: software.aws.rds.jdbc.mysql.Driver
----
-spring:
-  config:
-    activate:
-      on-profile: stg
-  datasource:
-    url: jdbc:mysql:aws://rds-stg-ufms-cluster.cluster-cuotfas3arzc.ap-northeast-2.rds.amazonaws.com:3306/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
-    username: ufms_was
-    password: ${sm.mysql.password}
-    driver-class-name: software.aws.rds.jdbc.mysql.Driver
-
