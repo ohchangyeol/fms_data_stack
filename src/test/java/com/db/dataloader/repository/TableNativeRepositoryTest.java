@@ -1,14 +1,14 @@
 package com.db.dataloader.repository;
 
-import com.db.dataloader.fms.dto.TableColumnDetail;
-import com.db.dataloader.fms.dto.TableCountResult;
-import com.db.dataloader.fms.dto.TablePartition;
-import com.db.dataloader.fms.dto.TablePartitionDetail;
-import com.db.dataloader.fms.repository.TableNativeRepository;
-import com.db.dataloader.fms.resource.CommonConstant;
-import com.db.dataloader.fms.resource.SqlConstant;
-import com.db.dataloader.fms.service.DataCreateSvc;
-import com.db.dataloader.fms.utils.CommonUtils;
+import com.db.dataloader.project.fms.dto.TableColumnDetail;
+import com.db.dataloader.project.fms.dto.TableCountResult;
+import com.db.dataloader.project.fms.dto.TablePartition;
+import com.db.dataloader.project.fms.dto.TablePartitionDetail;
+import com.db.dataloader.project.fms.repository.TableNativeRepository;
+import com.db.dataloader.rsc.CommonConstant;
+import com.db.dataloader.project.fms.resource.SqlConstant;
+import com.db.dataloader.project.fms.service.DataCreateSvc;
+import com.db.dataloader.project.fms.utils.FmsUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -169,7 +169,7 @@ class TableNativeRepositoryTest {
             for (int j = 0; j < tableColumns.size(); j++) {
                 TableColumnDetail detail = tableColumns.get(j);
 
-                Object value = "NO".equals(detail.getIsNullable()) ? CommonUtils.setFieldValue(detail, startIdx , new Timestamp(System.currentTimeMillis())) : CommonUtils.setFixValue(detail,null);
+                Object value = "NO".equals(detail.getIsNullable()) ? FmsUtils.setFieldValue(detail, startIdx , new Timestamp(System.currentTimeMillis())) : FmsUtils.setFixValue(detail,null);
                 colunms.add(value);
 
             }
