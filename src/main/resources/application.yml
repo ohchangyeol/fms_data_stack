@@ -2,9 +2,15 @@ spring :
   application :
     name : initalizr
   datasource:
-    url: jdbc:mysql://uconnect.conv.site:33062/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
-    username: root
-    password: ${sm.mysql.password}
+    # FMS
+#    url: jdbc:mysql://uconnect.conv.site:33062/ufmsnew?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+    # DX
+#    url: jdbc:mysql://dbms.conv.site:33060/IIOT_SF?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+#    username: IIOTADM
+#    password: "IIOTADM1234!"
+    url: jdbc:mysql://localhost.querypie.com:40081/IIOT_SF?rewriteBatchedStatements=true&useServerPrepStmts=false
+    username: querypie
+    password: "6514087de86f2360"
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -15,6 +21,11 @@ spring :
         format_sql: true
         order_inserts: true
         jdbc.batch_size: 100
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
 logging:
   level:
     org.hibernate.SQL: info
@@ -44,3 +55,4 @@ spring:
     username: ufms_was
     password: ${sm.mysql.password}
     driver-class-name: software.aws.rds.jdbc.mysql.Driver
+
