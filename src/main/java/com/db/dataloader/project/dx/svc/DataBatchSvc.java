@@ -2,6 +2,7 @@ package com.db.dataloader.project.dx.svc;
 
 import com.db.dataloader.project.dx.dto.TableInfoDto;
 import com.db.dataloader.rsc.CommonConstant;
+import com.db.dataloader.utils.TimeUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.transaction.Transactional;
@@ -17,6 +18,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -38,7 +40,9 @@ public class DataBatchSvc {
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void run(TableInfoDto tableInfoDto, List<Tuple> results, String partition){
+        LocalDateTime start = LocalDateTime.now();
         int totalCount = tableInfoDto.getMonthCnt();
+        AtomicInteger totalInsertCount = new AtomicInteger();
         Iterator<LocalDateTime> dateIterator = splitMonthIterator(partition, totalCount);
         List<String> columns = resolveColumns(tableInfoDto);
         String insertSql = buildInsertSql(tableInfoDto, columns);
@@ -50,7 +54,7 @@ public class DataBatchSvc {
         session.doWork(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 int count = 0;
-                int total = 0;
+
                 for (int i = 0; i < totalCount; i++) {
                     LocalDateTime ts = dateIterator.next();
                     Tuple t = results.get(rng.nextInt(results.size()));
@@ -65,13 +69,17 @@ public class DataBatchSvc {
                     boolean last = (i == totalCount - 1);
                     if (count == batchSize || last) {
                         ps.executeBatch();
-                        total += count;
+                        totalInsertCount.addAndGet(count);
                         count = 0;
-                        log.info("[{}] - insert count :{}",tableInfoDto.getTable(), total);
+                        log.info("[{}] -insert count : {}",tableInfoDto.getTable(), totalInsertCount);
                     }
                 }
             }
         });
+        LocalDateTime end = LocalDateTime.now();
+
+        log.info("[{}] -start time  : {} -end time : {} -time difference : {} -totalInsertCount count : {}",
+                tableInfoDto.getTable(), start.format(CommonConstant.FORMATTER_TS), end.format(CommonConstant.FORMATTER_TS), TimeUtil.elapsedHms(start,end), totalInsertCount);
     }
 
     private List<String> resolveColumns(TableInfoDto config) {
