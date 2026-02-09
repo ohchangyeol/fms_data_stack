@@ -6,9 +6,10 @@ import java.util.List;
 public class CommonConstant {
 
     public static final DateTimeFormatter FORMATTER_TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    public static final DateTimeFormatter FORMATTER_TS6 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+    public static final DateTimeFormatter FORMATTER_TS3 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     public static final DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     public static final DateTimeFormatter FORMATTER_YMDHMS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    public static final DateTimeFormatter FORMATTER_YMDHMS3 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     public static final DateTimeFormatter FORMATTER_YMD = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public static final String SCHEMA_UFMSNEW = "INITUFMSNEW";
@@ -31,9 +32,10 @@ public class CommonConstant {
 
     // DX
     public static final String COLUMN_TS = "ts";
-    public static final String COLUMN_TS6 = "ts6";
+    public static final String COLUMN_TS3 = "ts3";
     public static final String COLUMN_DATE = "date";
     public static final String COLUMN_YMDHMS = "ymdhms";
+    public static final String COLUMN_YMDHMS3 = "ymdhms3";
     public static final String COLUMN_YMD = "ymd";
     public static final String COLUMN_AUTO = "auto";
 

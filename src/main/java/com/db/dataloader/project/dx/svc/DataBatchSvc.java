@@ -117,14 +117,17 @@ public class DataBatchSvc {
             case CommonConstant.COLUMN_TS:
                 ps.setString(index, ts.format(CommonConstant.FORMATTER_TS));
                 return index + 1;
-            case CommonConstant.COLUMN_TS6:
-                ps.setString(index, ts.format(CommonConstant.FORMATTER_TS6));
+            case CommonConstant.COLUMN_TS3:
+                ps.setString(index, ts.format(CommonConstant.FORMATTER_TS3));
                 return index + 1;
             case CommonConstant.COLUMN_DATE:
                 ps.setString(index, ts.toLocalDate().format(CommonConstant.FORMATTER_DATE));
                 return index + 1;
             case CommonConstant.COLUMN_YMDHMS:
                 ps.setString(index, ts.format(CommonConstant.FORMATTER_YMDHMS));
+                return index + 1;
+            case CommonConstant.COLUMN_YMDHMS3:
+                ps.setString(index, ts.format(CommonConstant.FORMATTER_YMDHMS3));
                 return index + 1;
             case CommonConstant.COLUMN_YMD:
                 ps.setString(index, ts.toLocalDate().format(CommonConstant.FORMATTER_YMD));
